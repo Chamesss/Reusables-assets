@@ -3,7 +3,7 @@ cors = require('cors');
 express = require('express');
 morgan = require('morgan');
 helmet = require("helmet");
-
+const cookieparser = require('cookie-parser'); 
 const userRoutes = require('./routes/userRoutes');
 const app = express();
 const port = 8080;
@@ -28,6 +28,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('combined'));
 app.use(helmet());
 app.use(express.json());
+app.use(cookieparser()); 
+
 
 
 app.use('/user', userRoutes);
