@@ -10,13 +10,12 @@ const userRoutes = require('./routes/userRoutes');
 const app = express();
 const port = 8080;
 
-
 mongoose.connect(process.env.DB_CONNECTION, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
         console.log('connected !');
     })
-    .catch((err) => {
-        console.log('Failed to connect: ', err);
+    .catch((error) => {
+        console.log('Failed to connect: ', error);
     })
 
 app.use(cors({
@@ -29,14 +28,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('combined'));
 app.use(helmet());
-app.use(express.json());
 app.use(cookieparser()); 
 
-
-
-
 app.use('/user', userRoutes);
-
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

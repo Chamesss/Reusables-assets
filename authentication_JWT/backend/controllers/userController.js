@@ -1,9 +1,6 @@
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-
-const acccessSecret = 'access-token-secret';
-const refreshSecret = 'refresh-token-secret';
+const Token = require('../middlewares/jwtToken');
 
 exports.createUser = async (req, res) => {
   try {
@@ -23,8 +20,8 @@ exports.createUser = async (req, res) => {
     });
     const savedUser = await user.save();
 
-    const accessToken = jwt.sign({ userId: savedUser._id, firstname: savedUser.firstName, lastName: savedUser.lastName }, acccessSecret, { expiresIn: '5m' });
-    const refreshToken = jwt.sign({ userId: savedUser._id, firstname: savedUser.firstName, lastName: savedUser.lastName }, refreshSecret, { expiresIn: '1d' });
+    const accessToken = Token.signAccessJWT(savedUser);
+    const refreshToken = Token.signRefreshJWT(savedUser);
 
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
@@ -55,8 +52,8 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: 'Invalid password' });
     }
 
-    const accessToken = jwt.sign({ userId: user._id, firstname: user.firstName, lastName: user.lastName }, acccessSecret, { expiresIn: '5m' });
-    const refreshToken = jwt.sign({ userId: user._id, firstname: user.firstName, lastName: user.lastName }, refreshSecret, { expiresIn: '1d' });
+    const accessToken = Token.signAccessJWT(user);
+    const refreshToken = Token.signRefreshJWT(user);
 
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
@@ -84,9 +81,9 @@ exports.logout = async (req, res) => {
     httpOnly: true,
     maxAge: 0
   });
-  return res.status(202).json({ success: true });
+  return res.status(200).json({ success: true });
 }
 
 exports.action = async (req, res) => {
-  return res.status(202).json({ user: req.user });
+  return res.status(200).json({ ...req.user, message: "Action well performed" });
 }
