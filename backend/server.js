@@ -3,13 +3,15 @@ cors = require('cors');
 express = require('express');
 morgan = require('morgan');
 helmet = require("helmet");
+require("dotenv").config();
+
 const cookieparser = require('cookie-parser'); 
 const userRoutes = require('./routes/userRoutes');
 const app = express();
 const port = 8080;
 
 
-mongoose.connect('mongodb+srv://chams:chams@base-cluster.ad8qz93.mongodb.net/', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(process.env.DB_CONNECTION, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
         console.log('connected !');
     })
