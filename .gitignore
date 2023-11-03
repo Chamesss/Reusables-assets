@@ -1,6 +1,6 @@
-backend/node_modules/
-frontend/node_modules/
-backend/*.log
-backend/.env
-frontend/*.log
-frontend/.env
+authentication_JWT/backend/node_modules/
+authentication_JWT/frontend/node_modules/
+authentication_JWT/backend/*.log
+authentication_JWT/backend/.env
+authentication_JWT/frontend/*.log
+authentication_JWT/frontend/.env
