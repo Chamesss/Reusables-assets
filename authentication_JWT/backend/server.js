@@ -32,6 +32,13 @@ app.use(cookieparser());
 
 app.use('/user', userRoutes);
 
+app.all("*", (req, res, next) => {
+    res.status(404).json({
+      status: "false ",
+      message: "Page Note Found !",
+    });
+  });
+
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });

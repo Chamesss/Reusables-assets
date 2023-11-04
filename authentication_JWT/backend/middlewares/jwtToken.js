@@ -1,12 +1,26 @@
 const jwt = require('jsonwebtoken');
 
+const signToken = (user, secret, expiresIn) => {
+  return jwt.sign(
+    {
+      userId: user._id || user.userId,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    },
+    secret,
+    {
+      expiresIn,
+    }
+  );
+};
+
 exports.signAccessJWT = (user) => {
-  return accessToken = jwt.sign({ userId: user._id, firstName: user.firstName, lastName: user.lastName }, process.env.ACCESS_SECRET, { expiresIn: '5m' });
-}
+  return signToken(user, process.env.ACCESS_SECRET, '5m');
+};
 
 exports.signRefreshJWT = (user) => {
-  return refreshToken = jwt.sign({ userId: user._id, firstName: user.firstName, lastName: user.lastName }, process.env.REFRESH_SECRET, { expiresIn: '1d' });
-}
+  return signToken(user, process.env.REFRESH_SECRET, '1d');
+};
 
 exports.authenticate = (req, res, next) => {
   const accessToken = req.cookies['accessToken'];
@@ -28,7 +42,7 @@ exports.authenticate = (req, res, next) => {
     try {
       const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
       req.user = decoded;
-      const accessToken = jwt.sign({ userId: decoded.userId, firstName: decoded.firstName, lastName: decoded.lastName }, process.env.ACCESS_SECRET, { expiresIn: '5m' });
+      const accessToken = signToken(decoded, process.env.ACCESS_SECRET, '5m');
       res.cookie('accessToken', accessToken, {
         httpOnly: true, sameSite: 'none', secure: false,
         maxAge: 300000 //5m
