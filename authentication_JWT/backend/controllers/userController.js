@@ -2,6 +2,22 @@ const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const Token = require('../middlewares/jwtToken');
 
+const setCookie = (res, name, value, maxAge) => {
+  res.cookie(name, value, {
+    httpOnly: true,
+    sameSite: 'None',
+    secure: false,
+    maxAge,
+  });
+};
+
+const setTokensAndCookies = async (res, user) => {
+  const accessToken = Token.signAccessJWT(user);
+  const refreshToken = Token.signRefreshJWT(user);
+  setCookie(res, 'accessToken', accessToken, 300000); // 5 minutes
+  setCookie(res, 'refreshToken', refreshToken, 24 * 60 * 60 * 1000); // 1 day
+};
+
 exports.createUser = async (req, res) => {
   try {
     const { firstName, lastName, age, password } = req.body;
@@ -20,20 +36,9 @@ exports.createUser = async (req, res) => {
     });
     const savedUser = await user.save();
 
-    const accessToken = Token.signAccessJWT(savedUser);
-    const refreshToken = Token.signRefreshJWT(savedUser);
+    // Set tokens and cookies
+    await setTokensAndCookies(res, savedUser);
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      sameSite: 'None', secure: false,
-      maxAge: 300000 // 5 minutes
-    });
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      sameSite: 'None', secure: false,
-      maxAge: 24 * 60 * 60 * 1000 // 1day
-    });
     return res.json({ savedUser });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -52,20 +57,9 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: 'Invalid password' });
     }
 
-    const accessToken = Token.signAccessJWT(user);
-    const refreshToken = Token.signRefreshJWT(user);
+    // Set tokens and cookies
+    await setTokensAndCookies(res, user);
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      sameSite: 'None', secure: false,
-      maxAge: 300000 // 5 minutes
-    });
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      sameSite: 'None', secure: false,
-      maxAge: 24 * 60 * 60 * 1000 // 1day
-    });
     return res.json({ user });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -73,14 +67,8 @@ exports.login = async (req, res) => {
 }
 
 exports.logout = async (req, res) => {
-  res.cookie('accessToken', '', {
-    httpOnly: true,
-    maxAge: 0
-  });
-  res.cookie('refreshToken', '', {
-    httpOnly: true,
-    maxAge: 0
-  });
+  setCookie(res, 'accessToken', '', 0);
+  setCookie(res, 'refreshToken', '', 0);
   return res.status(200).json({ success: true });
 }
 
