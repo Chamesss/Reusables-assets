@@ -1,6 +1,6 @@
-authentication_JWT/backend/node_modules/
-authentication_JWT/frontend/node_modules/
-authentication_JWT/backend/*.log
-authentication_JWT/backend/.env
-authentication_JWT/frontend/*.log
-authentication_JWT/frontend/.env
+authentication_JWT/server/node_modules/
+authentication_JWT/auth-app/node_modules/
+authentication_JWT/server/*.log
+authentication_JWT/server/.env
+authentication_JWT/auth-app/*.log
+authentication_JWT/auth-app/.env

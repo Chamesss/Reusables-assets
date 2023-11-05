@@ -1,6 +1,6 @@
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
-const Token = require('../middlewares/jwtToken');
+const { signAccessJWT, signRefreshJWT} = require('../middlewares/verifyjwt');
 
 const setCookie = (res, name, value, maxAge) => {
   res.cookie(name, value, {
@@ -9,13 +9,6 @@ const setCookie = (res, name, value, maxAge) => {
     secure: false,
     maxAge,
   });
-};
-
-const setTokensAndCookies = async (res, user) => {
-  const accessToken = Token.signAccessJWT(user);
-  const refreshToken = Token.signRefreshJWT(user);
-  setCookie(res, 'accessToken', accessToken, 300000); // 5 minutes
-  setCookie(res, 'refreshToken', refreshToken, 24 * 60 * 60 * 1000); // 1 day
 };
 
 exports.createUser = async (req, res) => {
@@ -37,9 +30,11 @@ exports.createUser = async (req, res) => {
     const savedUser = await user.save();
 
     // Set tokens and cookies
-    await setTokensAndCookies(res, savedUser);
+    const accessToken = signAccessJWT(user);
+    const refreshToken = signRefreshJWT(user);
+    setCookie(res, 'refreshToken', refreshToken, 24 * 60 * 60 * 1000); // 1 day
 
-    return res.json({ savedUser });
+    return res.json({ user:savedUser, accessToken });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -48,6 +43,8 @@ exports.createUser = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { firstName, password } = req.body;
+    console.log(firstName, password);
+    console.log(req.body)
     const user = await User.findOne({ firstName });
     if (!user) {
       return res.status(401).json({ error: 'Invalid username' });
@@ -58,9 +55,11 @@ exports.login = async (req, res) => {
     }
 
     // Set tokens and cookies
-    await setTokensAndCookies(res, user);
+    const accessToken = signAccessJWT(user);
+    const refreshToken = signRefreshJWT(user);
+    setCookie(res, 'refreshToken', refreshToken, 24 * 60 * 60 * 1000); // 1 day
 
-    return res.json({ user });
+    return res.json({ user, accessToken });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
