@@ -1,6 +1,6 @@
 import React from 'react'
 import { useState } from 'react'
-import { Link, useNavigate, useLocation  } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import useAuth from '../hooks/useAuth';
 
@@ -9,13 +9,11 @@ const Login = () => {
     const [pwd, setPwd] = useState('')
     const { setAuth } = useAuth();
     const navigate = useNavigate();
-    const location = useLocation();
-    const from = location.state?.from?.pathname || "/";
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('/login',
+            const response = await axios.post('/user/login',
                 JSON.stringify({ firstName: user, password: pwd }),
                 {
                     headers: { 'Content-Type': 'application/json' },
@@ -26,7 +24,7 @@ const Login = () => {
             setAuth({user: response.data.user, accessToken: response.data.accessToken})
             setUser('');
             setPwd('');
-            navigate(from, { replace: true });
+            navigate('/protected');
         } catch (error) {
             console.log(error.response)
         }

@@ -72,5 +72,6 @@ exports.logout = async (req, res) => {
 }
 
 exports.action = async (req, res) => {
+  console.log('action well performed !')
   return res.status(200).json({ ...req.user, message: "Action well performed" });
 }
