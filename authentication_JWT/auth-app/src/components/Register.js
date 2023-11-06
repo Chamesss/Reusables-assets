@@ -1,4 +1,6 @@
-import React from 'react'
+import React, { useState }  from 'react'
+import { Link } from 'react-router-dom'
+
 
 const Register = () => {
 
@@ -16,7 +18,6 @@ const Register = () => {
                 <input
                     type="text"
                     id="username"
-                    ref={userRef}
                     autoComplete="off"
                     onChange={(e) => setUser(e.target.value)}
                     value={user}
