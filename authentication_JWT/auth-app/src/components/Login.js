@@ -1,14 +1,41 @@
 import React from 'react'
 import { useState } from 'react'
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation  } from 'react-router-dom';
+import axios from '../api/axios';
+import useAuth from '../hooks/useAuth';
 
 const Login = () => {
     const [user, setUser] = useState('')
     const [pwd, setPwd] = useState('')
-  return (
-    <section>
+    const { setAuth } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from?.pathname || "/";
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await axios.post('/login',
+                JSON.stringify({ firstName: user, password: pwd }),
+                {
+                    headers: { 'Content-Type': 'application/json' },
+                    withCredentials: true
+                }
+            );
+            console.log(JSON.stringify(response?.data));
+            setAuth({user: response.data.user, accessToken: response.data.accessToken})
+            setUser('');
+            setPwd('');
+            navigate(from, { replace: true });
+        } catch (error) {
+            console.log(error.response)
+        }
+    }
+
+    return (
+        <section>
             <h1>Sign In</h1>
-            <form>
+            <form onSubmit={handleSubmit}>
                 <label htmlFor="username">Username:</label>
                 <input
                     type="text"
@@ -36,7 +63,7 @@ const Login = () => {
                 </span>
             </p>
         </section>
-  )
+    )
 }
 
 export default Login
