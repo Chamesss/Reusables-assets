@@ -6,7 +6,7 @@ const setCookie = (res, name, value, maxAge) => {
   res.cookie(name, value, {
     httpOnly: true,
     sameSite: 'None',
-    secure: false,
+    secure: true,
     maxAge,
   });
 };

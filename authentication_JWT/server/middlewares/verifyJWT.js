@@ -40,6 +40,7 @@ exports.verifyJWT = (req, res, next) => {
 
 exports.refreshToken = async (req, res) => {
     const refreshToken = req.cookies['refreshToken'];
+    console.log(refreshToken)
     if (!refreshToken) {
         return res.status(401).send('Access Denied. No token provided.');
     }
