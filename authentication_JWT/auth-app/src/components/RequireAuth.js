@@ -28,11 +28,14 @@ const RequireAuth = () => {
                 }
             } catch (error) {
                 setIsLoading(false);
+                setFailed(true);
                 console.error("Token refresh failed:", error);
             }
         }
         if (!auth.accessToken) {
             checkToken();
+        } else {
+            setIsLoading(false);
         }
     }, [])
 
@@ -51,7 +54,10 @@ const RequireAuth = () => {
                 </div>
             )}
             {failed && (
-                <div><Navigate to="/login" state={{ from: location }} replace /></div>
+                <div>
+                    <script>{console.log('failed, supposed to get u somewhere')}</script>
+                    <Navigate to="/login" state={{ from: location }} replace />
+                </div>
             )}
         </div>
     )

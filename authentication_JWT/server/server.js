@@ -21,7 +21,7 @@ mongoose.connect(process.env.DB_CONNECTION, { useNewUrlParser: true, useUnifiedT
 app.use(cors({
     credentials: true,
     methods: ["GET", "POST", "DELETE", "PATCH", "PUT"],
-    origin: ['http://localhost:8080'],
+    origin: ['http://localhost:3000'],
 }));
 
 app.use(express.json());
