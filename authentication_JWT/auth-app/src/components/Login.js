@@ -20,7 +20,7 @@ const Login = () => {
                     withCredentials: true
                 }
             );
-            setAuth({user: response.data.user, accessToken: response.data.accessToken})
+            setAuth({ user: response.data.user, accessToken: response.data.accessToken })
             setUser('');
             setPwd('');
             navigate('/protected');
@@ -34,6 +34,7 @@ const Login = () => {
             <h1>Sign In</h1>
             <form onSubmit={handleSubmit}>
                 <label htmlFor="username">Username:</label>
+                <br />
                 <input
                     type="text"
                     id="username"
@@ -42,8 +43,9 @@ const Login = () => {
                     value={user}
                     required
                 />
-
+                <br />
                 <label htmlFor="password">Password:</label>
+                <br />
                 <input
                     type="password"
                     id="password"
@@ -51,12 +53,15 @@ const Login = () => {
                     value={pwd}
                     required
                 />
+                <br />
                 <button>Sign In</button>
             </form>
             <p>
                 Need an Account?<br />
                 <span className="line">
                     <Link to="/register">Sign Up</Link>
+                    <br />
+                    <Link to="/">Home</Link>
                 </span>
             </p>
         </section>

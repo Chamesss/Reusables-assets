@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from '../api/axios';
 import useAuth from "../hooks/useAuth";
+import { axiosPrivate as privateAxios } from "../api/axios";
+
 
 const Protected = () => {
     const axiosPrivate = useAxiosPrivate();
@@ -29,9 +30,7 @@ const Protected = () => {
     const logOut = async (e) => {
         e.preventDefault()
         try {
-            const response = await axios.get('/user/logout', {
-                withCredentials: true
-            });
+            const response = await privateAxios.get('/user/logout');
             if (response.data.success === true) {
                 setAuth({ user: null, accessToken: null })
                 fallBack()
@@ -43,6 +42,7 @@ const Protected = () => {
 
     return (
         <section>
+            <button onClick={() => navigate(-1)}>Back</button>
             <h1>Welcome {auth.user.firstName} {auth.user.lastName} !</h1>
             <h1>I'm {auth.user.age} y.o</h1>
             {state && Object.entries(state).map(([key, value]) => (

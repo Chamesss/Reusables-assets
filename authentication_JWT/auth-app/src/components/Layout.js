@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import useAuth from "../hooks/useAuth";
 import useRefreshToken from "../hooks/useRefreshToken";
 import axios from "../api/axios";
-
 const Layout = () => {
 
     const { auth } = useAuth();
@@ -11,8 +10,7 @@ const Layout = () => {
     const { setAuth } = useAuth();
     const [terminated, setTerminated] = useState(false);
 
-
-
+    /* eslint-disable react-hooks/exhaustive-deps */
     useEffect(() => {
         const checkToken = async () => {
             try {

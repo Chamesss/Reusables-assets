@@ -1,4 +1,4 @@
-import React, { useState }  from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 
@@ -15,6 +15,7 @@ const Register = () => {
                 <label htmlFor="username">
                     Username:
                 </label>
+                <br />
                 <input
                     type="text"
                     id="username"
@@ -23,9 +24,11 @@ const Register = () => {
                     value={user}
                     required
                 />
+                <br />
                 <label htmlFor="password">
                     Password:
                 </label>
+                <br />
                 <input
                     type="password"
                     id="password"
@@ -33,9 +36,11 @@ const Register = () => {
                     value={pwd}
                     required
                 />
+                <br />
                 <label htmlFor="confirm_pwd">
                     Confirm Password:
                 </label>
+                <br />
                 <input
                     type="password"
                     id="confirm_pwd"
@@ -43,12 +48,15 @@ const Register = () => {
                     value={matchPwd}
                     required
                 />
+                <br />
                 <button>Sign Up</button>
             </form>
             <p>
                 Already registered?<br />
                 <span className="line">
-                    <Link to="/">Sign In</Link>
+                    <Link to="/login">Sign In</Link>
+                    <br />
+                    <Link to="/">Home</Link>
                 </span>
             </p>
         </section>
