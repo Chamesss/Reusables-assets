@@ -86,3 +86,9 @@ section {
   align-items: center;
 }
 
+form {
+  background-color: rgba(54, 0, 91, 0.4);
+  padding: 5rem 5rem;
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+}

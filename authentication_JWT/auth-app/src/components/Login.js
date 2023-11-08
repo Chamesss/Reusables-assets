@@ -7,6 +7,7 @@ import useAuth from '../hooks/useAuth';
 const Login = () => {
     const [user, setUser] = useState('')
     const [pwd, setPwd] = useState('')
+    const [error, setError] = useState('');
     const { setAuth } = useAuth();
     const navigate = useNavigate();
 
@@ -25,13 +26,14 @@ const Login = () => {
             setPwd('');
             navigate('/protected');
         } catch (error) {
-            console.log(error.response)
+            setError('Incorrect username or password')
         }
     }
 
     return (
         <section>
             <h1>Sign In</h1>
+            {error && (<p>{error}</p>)}
             <form onSubmit={handleSubmit}>
                 <label htmlFor="username">Username:</label>
                 <br />

@@ -34,7 +34,7 @@ exports.createUser = async (req, res) => {
     const refreshToken = signRefreshJWT(user);
     setCookie(res, 'refreshToken', refreshToken, 24 * 60 * 60 * 1000); // 1 day
 
-    return res.json({ user: savedUser, accessToken });
+    return res.status(200).json({ user: savedUser, accessToken });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
