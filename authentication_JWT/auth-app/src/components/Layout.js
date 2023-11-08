@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import useAuth from "../hooks/useAuth";
 import useRefreshToken from "../hooks/useRefreshToken";
 import axios from "../api/axios";
+import Spinner from "./Spinner";
 const Layout = () => {
 
     const { auth } = useAuth();
@@ -38,9 +39,7 @@ const Layout = () => {
     return (
         <main className="App">
             {!terminated &&
-                <div>
-                    Loading...
-                </div>
+                <Spinner />
             }
             {terminated &&
                 <Outlet />
