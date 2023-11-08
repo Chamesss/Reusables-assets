@@ -20,7 +20,6 @@ const Login = () => {
                     withCredentials: true
                 }
             );
-            console.log(JSON.stringify(response?.data));
             setAuth({user: response.data.user, accessToken: response.data.accessToken})
             setUser('');
             setPwd('');

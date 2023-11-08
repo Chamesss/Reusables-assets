@@ -1,6 +1,6 @@
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
-const { signAccessJWT, signRefreshJWT} = require('../middlewares/verifyjwt');
+const { signAccessJWT, signRefreshJWT } = require('../middlewares/verifyjwt');
 
 const setCookie = (res, name, value, maxAge) => {
   res.cookie(name, value, {
@@ -34,7 +34,7 @@ exports.createUser = async (req, res) => {
     const refreshToken = signRefreshJWT(user);
     setCookie(res, 'refreshToken', refreshToken, 24 * 60 * 60 * 1000); // 1 day
 
-    return res.json({ user:savedUser, accessToken });
+    return res.json({ user: savedUser, accessToken });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -66,7 +66,6 @@ exports.login = async (req, res) => {
 }
 
 exports.logout = async (req, res) => {
-  setCookie(res, 'accessToken', '', 0);
   setCookie(res, 'refreshToken', '', 0);
   return res.status(200).json({ success: true });
 }
