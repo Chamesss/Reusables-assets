@@ -5,6 +5,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #b3bdd9;
 }
 
 code {
@@ -49,4 +50,53 @@ code {
   to {
     transform: rotate(360deg);
   }
+}
+
+
+button {
+  color: white;
+  margin: 1rem;
+  background-color: #282c34;
+  outline: none;
+  border-radius: 2px;
+  border: none;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  scale: 1.05;
+}
+
+input {
+  margin: 1rem;
+  outline: none;
+  border-radius: 2px;
+  border: none;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+loading {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+form {
+  background-color: rgba(54, 0, 91, 0.4);
+  padding: 5rem 5rem;
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
 }
