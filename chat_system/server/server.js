@@ -1,13 +1,15 @@
-mongoose = require('mongoose');
-cors = require('cors');
-express = require('express');
-morgan = require('morgan');
-helmet = require("helmet");
+const mongoose = require('mongoose');
+const cors = require('cors');
+const http = require("http");
+const express = require('express');
+const morgan = require('morgan');
+const helmet = require("helmet");
 require("dotenv").config();
 
 const cookieparser = require('cookie-parser');
 const userRoutes = require('./routes/userRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const initializeSocket = require("./socket");
 const app = express();
 const port = 8080;
 
@@ -40,6 +42,10 @@ app.use(cookieparser());
 app.use('/user', userRoutes);
 app.use('/chat', chatRoutes);
 
+const server = http.createServer(app);
+
+// Initialize Socket.io
+initializeSocket(server);
 
 app.all("*", (req, res, next) => {
     res.status(404).json({
@@ -48,6 +54,6 @@ app.all("*", (req, res, next) => {
     });
 });
 
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
