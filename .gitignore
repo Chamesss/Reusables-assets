@@ -4,3 +4,9 @@ authentication_JWT/server/*.log
 authentication_JWT/server/.env
 authentication_JWT/auth-app/*.log
 authentication_JWT/auth-app/.env
+chat_system/server/node_modules/
+chat_system/chat-app/node_modules/
+chat_system/server/*.log
+chat_system/server/.env
+chat_system/chat-app/*.log
+chat_system/chat-app/.env
