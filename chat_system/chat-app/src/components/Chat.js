@@ -11,12 +11,21 @@ const Chat = () => {
     const [conversationId, setconversationId] = useState(null);
     const [messages, setMessages] = useState(null);
     const [msg, setMsg] = useState('');
+    const [arrivalMessage, setArrivalMessage] = useState(null);
+
 
     useEffect(() => {
         const server = io("ws://localhost:8080")
         server.on('connect', () => {
             console.log('connected !');
         })
+        server.on("getMessage", (data) => {
+            setArrivalMessage({
+              sender: data.senderId,
+              text: data.text,
+              createdAt: Date.now(),
+            });
+          });
         const getConversation = async () => {
             try {
                 const response = await axios.get(`/chat/conversation/find/${auth.user._id}/${recieverId}`)
@@ -28,6 +37,12 @@ const Chat = () => {
         }
         getConversation();
     }, [])
+
+    useEffect(() => {
+        arrivalMessage &&
+        conversation?.members.includes(arrivalMessage.sender) &&
+          setMessages((prev) => [...prev, arrivalMessage]);
+      }, [arrivalMessage, conversation]);
 
     useEffect(() => {
         console.log(conversationId)
@@ -42,7 +57,8 @@ const Chat = () => {
         getMessages();
     }, [conversationId]);
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         let conversationid;
         if (!conversation) {
             try {
@@ -57,12 +73,19 @@ const Chat = () => {
             }
         }
 
+        socket.current.emit("sendMessage", {
+            senderId: user._id,
+            receiverId: recieverId,
+            text: msg,
+          });
+
         try {
             const response = await axios.post('/chat/msg', {
                 conversationId: conversationId || conversationid,
                 sender: auth.user._id,
                 text: msg,
             })
+            setMessages([...messages, response.data]);
         } catch (err) {
             console.log(err)
         }
@@ -88,7 +111,7 @@ const Chat = () => {
                             <>
                                 {messages.map((message) => {
                                     return (
-                                        <p key={message._id}>{message.text}</p>
+                                        <p key={message._id}>{message.text} from {message.sender}</p>
                                     )
                                 })}
                             </>
