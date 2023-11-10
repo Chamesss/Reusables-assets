@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import useAxiosPrivate from "../hooks/useAxiosPrivate";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import { axiosPrivate as privateAxios } from "../api/axios";
 
@@ -52,6 +52,8 @@ const Protected = () => {
             ))}
             <br />
             <button onClick={doAction}>Do Action</button>
+            <br />
+            <Link to='/protected/userslist'>Check users list</Link>
             <br />
             <button onClick={(e) => logOut(e)}>Log Out</button>
         </section>

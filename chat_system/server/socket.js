@@ -18,8 +18,9 @@ const getUser = (userId) => {
 const initializeSocket = (server) => {
   const io = socketIo(server, {
     cors: {
-      origin: "http://localhost:3000",
-    },
+      origin: 'http://localhost:3000',
+      credentials: true,
+  },
   });
 
   io.on("connection", (socket) => {

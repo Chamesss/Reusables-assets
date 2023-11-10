@@ -4,9 +4,9 @@ import SyncLoader from "react-spinners/SyncLoader";
 
 const Spinner = () => {
     return (
-        <loading>
+        <div className='loading'>
             <SyncLoader />
-        </loading>
+        </div>
     )
 }
 

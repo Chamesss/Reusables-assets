@@ -86,7 +86,7 @@ section {
   align-items: center;
 }
 
-loading {
+.loading {
   width: 100vw;
   height: 100vh;
   display: flex;
