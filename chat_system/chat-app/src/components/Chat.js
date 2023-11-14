@@ -12,10 +12,10 @@ const Chat = () => {
     const [messages, setMessages] = useState(null);
     const [msg, setMsg] = useState('');
     const [arrivalMessage, setArrivalMessage] = useState(null);
+    const server = io("ws://localhost:8080")
 
 
     useEffect(() => {
-        const server = io("ws://localhost:8080")
         server.on('connect', () => {
             console.log('connected !');
         })
@@ -39,13 +39,16 @@ const Chat = () => {
     }, [])
 
     useEffect(() => {
+        server.emit("addUser", auth.user._id);
+      }, [auth]);
+
+    useEffect(() => {
         arrivalMessage &&
         conversation?.members.includes(arrivalMessage.sender) &&
           setMessages((prev) => [...prev, arrivalMessage]);
       }, [arrivalMessage, conversation]);
 
     useEffect(() => {
-        console.log(conversationId)
         const getMessages = async () => {
             try {
                 const response = await axios.get(`/chat/msg/${conversationId}`);
@@ -73,8 +76,8 @@ const Chat = () => {
             }
         }
 
-        socket.current.emit("sendMessage", {
-            senderId: user._id,
+        server.emit("sendMessage", {
+            senderId: auth.user._id,
             receiverId: recieverId,
             text: msg,
           });
@@ -85,7 +88,8 @@ const Chat = () => {
                 sender: auth.user._id,
                 text: msg,
             })
-            setMessages([...messages, response.data]);
+            console.log(response.data)
+            setMessages([...messages, response.data.savedMessage]);
         } catch (err) {
             console.log(err)
         }
