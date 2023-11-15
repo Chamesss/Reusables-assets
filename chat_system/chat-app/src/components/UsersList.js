@@ -27,11 +27,11 @@ const UsersList = () => {
         <div>
             {users.map(user => {
                 return (
-                    <>
-                        <span key={user._id}>{user.firstName}</span>
+                    <div key={user._id}>
+                        <span>{user.firstName}</span>
                         <button onClick={() => handleNavigation(user._id)}>Send msg!</button>
                         <br />
-                    </>
+                    </div>
                 )
             })}
         </div>

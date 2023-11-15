@@ -5,6 +5,7 @@ let users = [];
 const addUser = (userId, socketId) => {
   !users.some((user) => user.userId === userId) &&
     users.push({ userId, socketId });
+    console.log('user added !!')
 };
 
 const removeUser = (socketId) => {
@@ -34,12 +35,12 @@ const initializeSocket = (server) => {
     });
 
     // send and get message
-    socket.on("sendMessage", ({ senderId, receiverId, text }) => {
+    socket.on("sendMessage", ({ senderName, receiverId, text }) => {
       const user = getUser(receiverId);
       io.to(user.socketId).emit("getMessage", {
-        senderId,
+        senderName,
         text,
-      });
+      })
     });
 
     // when disconnect

@@ -8,57 +8,80 @@ const Chat = () => {
     const { recieverId } = useParams();
     const { auth } = useAuth();
     const [conversation, setconversation] = useState(null);
-    const [conversationId, setconversationId] = useState(null);
     const [messages, setMessages] = useState(null);
     const [msg, setMsg] = useState('');
     const [arrivalMessage, setArrivalMessage] = useState(null);
-    const server = io("ws://localhost:8080")
+    const [server, setServer] = useState(null);
 
+    /* eslint-disable react-hooks/exhaustive-deps */
 
     useEffect(() => {
+        if (!server) {
+            setServer(io("ws://localhost:8080"));
+        }
+
+        return () => {
+            server?.disconnect();
+        };
+    }, [server]);
+
+    useEffect(() => {
+        if (!server || !auth) return;
         server.on('connect', () => {
-            console.log('connected !');
+            server.emit("addUser", auth.user._id);
         })
+
+
         server.on("getMessage", (data) => {
             setArrivalMessage({
-              sender: data.senderId,
-              text: data.text,
-              createdAt: Date.now(),
+                sender: data.senderName,
+                text: data.text,
+                createdAt: Date.now(),
             });
-          });
-        const getConversation = async () => {
+        });
+
+
+
+        const getMessages = async (conv_id) => {
             try {
-                const response = await axios.get(`/chat/conversation/find/${auth.user._id}/${recieverId}`)
-                setconversation(response.data);
-                setconversationId(response.data._id);
-            } catch (err) {
-                console.log(err);
-            }
-        }
-        getConversation();
-    }, [])
-
-    useEffect(() => {
-        server.emit("addUser", auth.user._id);
-      }, [auth]);
-
-    useEffect(() => {
-        arrivalMessage &&
-        conversation?.members.includes(arrivalMessage.sender) &&
-          setMessages((prev) => [...prev, arrivalMessage]);
-      }, [arrivalMessage, conversation]);
-
-    useEffect(() => {
-        const getMessages = async () => {
-            try {
-                const response = await axios.get(`/chat/msg/${conversationId}`);
+                const response = await axios.get(`/chat/msg/${conv_id}`);
                 setMessages(response.data);
             } catch (err) {
                 console.log(err);
             }
         };
-        getMessages();
-    }, [conversationId]);
+
+        const getConversation = async () => {
+            try {
+                console.log("Chat getConversation mounted");
+                const response = await axios.get(`/chat/conversation/find/${auth.user._id}/${recieverId}`)
+                setconversation(response.data ?? null);
+                return response.data?._id ?? null;
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        const handleStart = async () => {
+            const conv_id = await getConversation();
+            getMessages(conv_id);
+        }
+
+        handleStart();
+
+        return () => {
+            server.off('connect');
+            server.off('getMessage');
+        };
+    }, [server])
+
+
+    useEffect(() => {
+        if (!messages) return
+        console.log('is working')
+        setMessages((prev) => [...prev, arrivalMessage]);
+    }, [arrivalMessage]);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -69,7 +92,6 @@ const Chat = () => {
                     senderId: auth.user._id,
                     receiverId: recieverId,
                 })
-                setconversationId(response.data._id);
                 conversationid = response.data._id;
             } catch (err) {
                 console.log(err)
@@ -77,15 +99,17 @@ const Chat = () => {
         }
 
         server.emit("sendMessage", {
-            senderId: auth.user._id,
+            senderName: auth.user.firstName + ' ' + auth.user.lastName,
             receiverId: recieverId,
             text: msg,
-          });
+        });
+
+        console.log(conversationid)
 
         try {
             const response = await axios.post('/chat/msg', {
-                conversationId: conversationId || conversationid,
-                sender: auth.user._id,
+                conversationId: conversation?._id || conversationid,
+                sender: auth.user.firstName + ' ' + auth.user.lastName,
                 text: msg,
             })
             console.log(response.data)
