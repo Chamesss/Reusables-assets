@@ -24,12 +24,36 @@ exports.getAllConversations = async (req, res) => {
 }
 
 exports.getConversationOfTwoUsers = async (req, res) => {
+    let conversation
     try {
-        const conversation = await Conversation.findOne({
-            members: { $all: [req.params.firstUserId, req.params.secondUserId] }
-        })
+        if (req.params.firstUserId !== req.params.secondUserId) {
+            conversation = await Conversation.findOne({
+                $and: [
+                    { members: { $elemMatch: { $eq: req.params.firstUserId } } },
+                    { members: { $elemMatch: { $eq: req.params.secondUserId } } }
+                ]
+            });
+        } else {
+            conversation = await Conversation.aggregate([
+                {
+                    $project: {
+                        members: {
+                            $slice: ['$members', 2]
+                        }
+                    }
+                },
+                {
+                    $match: {
+                        members: [req.params.firstUserId, req.params.firstUserId]
+                    }
+                }
+            ])
+            conversation = conversation[0]
+        }
+
         res.status(200).json(conversation);
     } catch (err) {
+        console.log('error === ', err)
         res.status(500).json(err)
     }
 }

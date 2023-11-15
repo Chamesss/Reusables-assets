@@ -12,8 +12,31 @@ const Chat = () => {
     const [msg, setMsg] = useState('');
     const [arrivalMessage, setArrivalMessage] = useState(null);
     const [server, setServer] = useState(null);
+    const [mounted, setMounted] = useState(false)
 
     /* eslint-disable react-hooks/exhaustive-deps */
+
+
+    const getMessages = async (conv_id) => {
+        try {
+            const response = await axios.get(`/chat/msg/${conv_id}`);
+            setMessages(response.data);
+            console.log(response.data)
+        } catch (err) {
+            console.log(err);
+        }
+    };
+
+    const getConversation = async () => {
+        try {
+            const response = await axios.get(`/chat/conversation/find/${auth.user._id}/${recieverId}`)
+            console.log('conversation found === ', response.data)
+            setconversation(response.data ?? null);
+            return response.data?._id ?? null;
+        } catch (err) {
+            console.log(err);
+        }
+    }
 
     useEffect(() => {
         if (!server) {
@@ -40,31 +63,11 @@ const Chat = () => {
             });
         });
 
-
-
-        const getMessages = async (conv_id) => {
-            try {
-                const response = await axios.get(`/chat/msg/${conv_id}`);
-                setMessages(response.data);
-            } catch (err) {
-                console.log(err);
-            }
-        };
-
-        const getConversation = async () => {
-            try {
-                console.log("Chat getConversation mounted");
-                const response = await axios.get(`/chat/conversation/find/${auth.user._id}/${recieverId}`)
-                setconversation(response.data ?? null);
-                return response.data?._id ?? null;
-            } catch (err) {
-                console.log(err);
-            }
-        }
-
         const handleStart = async () => {
             const conv_id = await getConversation();
+            console.log(conv_id)
             getMessages(conv_id);
+            setMounted(true);
         }
 
         handleStart();
@@ -78,6 +81,9 @@ const Chat = () => {
 
     useEffect(() => {
         if (!messages) return
+        if (!conversation) {
+            getConversation();
+        }
         console.log('is working')
         setMessages((prev) => [...prev, arrivalMessage]);
     }, [arrivalMessage]);
@@ -93,6 +99,7 @@ const Chat = () => {
                     receiverId: recieverId,
                 })
                 conversationid = response.data._id;
+                setconversation(response.data)
             } catch (err) {
                 console.log(err)
             }
@@ -131,23 +138,27 @@ const Chat = () => {
             />
             <button onClick={handleSubmit} disabled={msg.length < 1}>Send</button>
             <h3>Conversation: </h3>
-            {conversation ?
-                (
-                    <div>
-                        <p>Messages :</p>
-                        {messages && (
+            {mounted && (
+                <>
+                    {conversation ?
+                        (
                             <>
-                                {messages.map((message) => {
-                                    return (
-                                        <p key={message._id}>{message.text} from {message.sender}</p>
-                                    )
-                                })}
+                                <p>Messages :</p>
+                                {messages && (
+                                    <>
+                                        {messages.map((message) => {
+                                            return (
+                                                <p key={message._id}>{message.text} from {message.sender}</p>
+                                            )
+                                        })}
+                                    </>
+                                )}
                             </>
+                        ) : (
+                            <p>Start a conversation</p>
                         )}
-                    </div>
-                ) : (
-                    <p>Start a conversation</p>
-                )}
+                </>
+            )}
         </div>
     )
 }
