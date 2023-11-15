@@ -51,9 +51,11 @@ const Chat = () => {
     useEffect(() => {
         if (!server || !auth) return;
         server.on('connect', () => {
-            server.emit("addUser", auth.user._id);
+            console.log('user connected')
         })
 
+        server.emit("addUser", auth.user._id);
+        server.emit("addConversation", auth.user._id, recieverId )
 
         server.on("getMessage", (data) => {
             setArrivalMessage({
@@ -65,7 +67,6 @@ const Chat = () => {
 
         const handleStart = async () => {
             const conv_id = await getConversation();
-            console.log(conv_id)
             getMessages(conv_id);
             setMounted(true);
         }

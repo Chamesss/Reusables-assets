@@ -44,7 +44,7 @@ exports.getConversationOfTwoUsers = async (req, res) => {
                 },
                 {
                     $match: {
-                        members: [req.params.firstUserId, req.params.firstUserId]
+                        members: [req.params.firstUserId, req.params.secondUserId]
                     }
                 }
             ])
