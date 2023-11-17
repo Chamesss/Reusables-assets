@@ -54,8 +54,7 @@ const Chat = () => {
             console.log('user connected')
         })
 
-        server.emit("addUser", auth.user._id);
-        server.emit("addConversation", auth.user._id, recieverId )
+        server.emit("addUser", auth.user._id, recieverId);
 
         server.on("getMessage", (data) => {
             setArrivalMessage({
@@ -77,7 +76,7 @@ const Chat = () => {
             server.off('connect');
             server.off('getMessage');
         };
-    }, [server])
+    }, [auth, server, recieverId])
 
 
     useEffect(() => {
@@ -107,6 +106,7 @@ const Chat = () => {
         }
 
         server.emit("sendMessage", {
+            senderId: auth.user._id,
             senderName: auth.user.firstName + ' ' + auth.user.lastName,
             receiverId: recieverId,
             text: msg,

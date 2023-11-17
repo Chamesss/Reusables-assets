@@ -16,8 +16,6 @@ exports.getMessages = async (req, res) => {
         const messages = await Message.find({
             conversationId: req.params.conversationId,
         });
-        console.log(messages)
-        console.log(req.params.conversationId)
         res.status(200).json(messages);
     } catch (err) {
         res.status(500).json(err)

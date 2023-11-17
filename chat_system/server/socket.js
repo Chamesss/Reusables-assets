@@ -2,30 +2,39 @@ const socketIo = require("socket.io");
 
 let users = [];
 
-const addUser = (userId, socketId) => {
-  !users.some((user) => (user.userId === userId)) &&
-    users.push({ userId, socketId, conversations: [] });
+const addUser = (userId, socketId, receiverId) => {
+  const userExistIndex = users.findIndex(user => (
+    user.userId === userId
+  ))
+  if (userExistIndex > -1) {
+    const conversationIndex = users[userExistIndex].conversations.findIndex(cnv => (
+      cnv.socketId === socketId && cnv.receiverId === receiverId
+    ))
+    if (conversationIndex === -1) {
+      users[userExistIndex].conversations.push({
+        socketId,
+        receiverId
+      })
+    }
+  } else {
+    users.push({ userId, conversations: [{ socketId, receiverId }] });
+  }
 };
 
 const removeUser = (socketId) => {
-  users = users.filter((user) => user.socketId !== socketId);
+  const userExistIndex = users.findIndex(user => user.conversations.socketId === socketId)
+  if (userExistIndex !== -1) {
+    const updatedUser = {
+      ...users[userExistIndex],
+      conversations: users[userExistIndex].conversations.filter(cnv => cnv.socketId !== socketId)
+    }
+    users[userExistIndex] = updatedUser
+  }
+  users = users.filter((user) => user.conversations.some(cnv => cnv.socketId.length > 0));
 };
 
 const getUser = (id) => {
-  return users.find((user) => (user.userId === id) || (user.socketId === id));
-};
-
-const addConversation = (userId, receiverId) => {
-  const user = getUser(userId);
-  const receiver = getUser(receiverId);
-
-  if (user && receiver) {
-    console.log('conv added')
-    user.conversations.push({
-      userId: receiverId,
-      socketId: receiver.socketId,
-    });
-  }
+  return users.find((user) => (user.userId === id));
 };
 
 const initializeSocket = (server) => {
@@ -40,34 +49,28 @@ const initializeSocket = (server) => {
     console.log("a user connected.");
 
     // take userId and socketId from user
-    socket.on("addUser", (userId) => {
-      addUser(userId, socket.id);
-    });
-
-    // add a new conversation for the user
-    socket.on("addConversation", ( userId, receiverId ) => {
-      const user = getUser(userId);
-      addConversation(user.userId, receiverId);
+    socket.on("addUser", (userId, receiverId) => {
+      addUser(userId, socket.id, receiverId);
     });
 
     // send and get message
-    socket.on("sendMessage", ({ senderName, receiverId, text }) => {
-      const user = getUser(socket.id);
-      let conversation = user.conversations.find((conv) => conv.userId === receiverId);
-    
-      if (!conversation) {
-        const receiverExist = getUser(receiverId);
-        if (receiverExist) {
-          addConversation(user.userId, receiverId);
-          conversation = user.conversations.find((conv) => conv.userId === receiverId);
-        } 
-      }
-    
-      if (conversation) {
-        io.to(conversation.socketId).emit("getMessage", {
-          senderName,
-          text,
-        });
+    socket.on("sendMessage", ({ senderId, senderName, receiverId, text }) => {
+      const receiver = getUser(receiverId);
+      const sender = getUser(senderId)
+      const conversationsReceiver = receiver.conversations.filter((cnv) => {
+        return cnv.receiverId === senderId
+      })
+      const conversationsSender = sender.conversations.filter((cnv) => {
+        return cnv.receiverId === receiverId;
+      });
+      const conversations = [...conversationsReceiver, ...conversationsSender];
+      if (conversations.length > 0) {
+        conversations.map((cnv => {
+          io.to(cnv.socketId).emit("getMessage", {
+            senderName,
+            text,
+          });
+        }))
       }
     });
 

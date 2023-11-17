@@ -43,8 +43,6 @@ exports.createUser = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { firstName, password } = req.body;
-    console.log(firstName, password);
-    console.log(req.body)
     const user = await User.findOne({ firstName });
     if (!user) {
       return res.status(401).json({ error: 'Invalid username' });
