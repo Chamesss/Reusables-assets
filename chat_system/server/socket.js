@@ -48,12 +48,23 @@ const initializeSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("a user connected.");
 
-    // take userId and socketId from user
+    // Add new user that contain the socketId related to all same conversations
     socket.on("addUser", (userId, receiverId) => {
       addUser(userId, socket.id, receiverId);
     });
 
-    // send and get message
+    // Send typing event to all same conversations
+    socket.on("typing", (senderName, senderId, receiverId) => {
+      const receiver = getUser(receiverId);
+      const conversationsReceiver = receiver.conversations.filter((cnv) => {
+        return cnv.receiverId === senderId
+      })
+      conversationsReceiver.map((cnv => {
+        io.to(cnv.socketId).emit("typing", senderName)
+      }))
+    })
+
+    // send and get message 
     socket.on("sendMessage", ({ senderId, senderName, receiverId, text }) => {
       const receiver = getUser(receiverId);
       const sender = getUser(senderId)

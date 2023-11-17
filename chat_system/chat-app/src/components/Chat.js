@@ -13,6 +13,7 @@ const Chat = () => {
     const [arrivalMessage, setArrivalMessage] = useState(null);
     const [server, setServer] = useState(null);
     const [mounted, setMounted] = useState(false)
+    const [typing, setTyping] = useState('')
 
     /* eslint-disable react-hooks/exhaustive-deps */
 
@@ -36,6 +37,11 @@ const Chat = () => {
         } catch (err) {
             console.log(err);
         }
+    }
+
+    const handleTyping = (e) => {
+        setMsg(e.target.value);
+        server.emit("typing", auth.user.firstName, auth.user._id, recieverId)
     }
 
     useEffect(() => {
@@ -64,6 +70,15 @@ const Chat = () => {
             });
         });
 
+        let activityTimer
+        server.on("typing", (senderName) => {
+            setTyping(`${senderName} is typing...`)
+            clearTimeout(activityTimer)
+            activityTimer = setTimeout(() => {
+                setTyping('');
+            }, 3000)
+        })
+
         const handleStart = async () => {
             const conv_id = await getConversation();
             getMessages(conv_id);
@@ -90,8 +105,10 @@ const Chat = () => {
 
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        let conversationid;
+        e.preventDefault()
+        setTyping('')
+        setMsg('')
+        let conversationid
         if (!conversation) {
             try {
                 const response = await axios.post('/chat/conversation', {
@@ -111,8 +128,6 @@ const Chat = () => {
             receiverId: recieverId,
             text: msg,
         });
-
-        console.log(conversationid)
 
         try {
             const response = await axios.post('/chat/msg', {
@@ -135,7 +150,7 @@ const Chat = () => {
             <input
                 placeholder='type a msg'
                 value={msg}
-                onChange={(e) => setMsg(e.target.value)}
+                onChange={(e) => handleTyping(e)}
             />
             <button onClick={handleSubmit} disabled={msg.length < 1}>Send</button>
             <h3>Conversation: </h3>
@@ -154,6 +169,7 @@ const Chat = () => {
                                         })}
                                     </>
                                 )}
+                                {typing && <p>{typing}</p>}
                             </>
                         ) : (
                             <p>Start a conversation</p>
