@@ -22,7 +22,8 @@ const addUser = (userId, socketId, receiverId) => {
 };
 
 const removeUser = (socketId) => {
-  const userExistIndex = users.findIndex(user => user.conversations.socketId === socketId)
+  const userExistIndex = users.findIndex(user => user.conversations.some((cnv) => cnv.socketId === socketId))
+  console.log('user index === ', userExistIndex)
   if (userExistIndex !== -1) {
     const updatedUser = {
       ...users[userExistIndex],
@@ -78,12 +79,26 @@ const initializeSocket = (server) => {
       if (conversations.length > 0) {
         conversations.map((cnv => {
           io.to(cnv.socketId).emit("getMessage", {
+            senderId,
             senderName,
             text,
           });
         }))
       }
     });
+
+    // when message is delivered
+    socket.on("delivered", (receiverId, senderId) => {
+      const sender = getUser(senderId);
+      const conversations = sender.conversations.filter((cnv) => {
+        return cnv.receiverId === receiverId
+      })
+      if (conversations.length > 0) {
+        conversations.map((cnv) => {
+          io.to(cnv.socketId).emit("delivered", cnv.socketId)
+        })
+      }
+    })
 
     // when disconnect
     socket.on("disconnect", () => {

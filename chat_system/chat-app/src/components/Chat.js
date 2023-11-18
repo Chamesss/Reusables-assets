@@ -10,6 +10,7 @@ const Chat = () => {
     const [conversation, setconversation] = useState(null);
     const [messages, setMessages] = useState(null);
     const [msg, setMsg] = useState('');
+    const [lastMsg, setLastMsg] = useState('');
     const [arrivalMessage, setArrivalMessage] = useState(null);
     const [server, setServer] = useState(null);
     const [mounted, setMounted] = useState(false)
@@ -68,6 +69,11 @@ const Chat = () => {
                 text: data.text,
                 createdAt: Date.now(),
             });
+            setLastMsg('')
+            setTyping('')
+            if (auth.user._id !== data.senderId) {
+                server.emit("delivered", auth.user._id, recieverId)
+            }
         });
 
         let activityTimer
@@ -77,6 +83,11 @@ const Chat = () => {
             activityTimer = setTimeout(() => {
                 setTyping('');
             }, 3000)
+        })
+
+        server.on("delivered", (socketId) => {
+            console.log(socketId)
+            setLastMsg("msg delivered !")
         })
 
         const handleStart = async () => {
@@ -99,7 +110,6 @@ const Chat = () => {
         if (!conversation) {
             getConversation();
         }
-        console.log('is working')
         setMessages((prev) => [...prev, arrivalMessage]);
     }, [arrivalMessage]);
 
@@ -108,6 +118,7 @@ const Chat = () => {
         e.preventDefault()
         setTyping('')
         setMsg('')
+        setLastMsg('')
         let conversationid
         if (!conversation) {
             try {
@@ -169,6 +180,7 @@ const Chat = () => {
                                         })}
                                     </>
                                 )}
+                                {lastMsg && <p>{lastMsg}</p>}
                                 {typing && <p>{typing}</p>}
                             </>
                         ) : (
