@@ -5,7 +5,11 @@ const MessageSchema = new mongoose.Schema(
         conversationId: {
             type: String,
         },
-        sender: {
+        senderId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        },
+        senderName: {
             type: String,
         },
         text: {

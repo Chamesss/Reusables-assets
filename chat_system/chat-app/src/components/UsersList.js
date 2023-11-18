@@ -29,6 +29,7 @@ const UsersList = () => {
                 return (
                     <div key={user._id}>
                         <span>{user.firstName}</span>
+                        {user.status && <span> (Online)</span>}
                         <button onClick={() => handleNavigation(user._id)}>Send msg!</button>
                         <br />
                     </div>

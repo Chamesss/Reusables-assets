@@ -1,5 +1,4 @@
 const Message = require("../models/message");
-const User = require("../models/user")
 
 exports.addMessage = async (req, res) => {
     const newMessage = new Message(req.body);

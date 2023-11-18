@@ -10,7 +10,7 @@ const Chat = () => {
     const [conversation, setconversation] = useState(null);
     const [messages, setMessages] = useState(null);
     const [msg, setMsg] = useState('');
-    const [lastMsg, setLastMsg] = useState('');
+    const [status, setStatus] = useState(false);
     const [arrivalMessage, setArrivalMessage] = useState(null);
     const [server, setServer] = useState(null);
     const [mounted, setMounted] = useState(false)
@@ -18,12 +18,14 @@ const Chat = () => {
 
     /* eslint-disable react-hooks/exhaustive-deps */
 
-
     const getMessages = async (conv_id) => {
         try {
             const response = await axios.get(`/chat/msg/${conv_id}`);
             setMessages(response.data);
-            console.log(response.data)
+            const messages = response.data
+            if (messages.length > 0 && messages[messages.length - 1].senderId === auth.user._id) {
+                setStatus(true)
+            }
         } catch (err) {
             console.log(err);
         }
@@ -32,7 +34,6 @@ const Chat = () => {
     const getConversation = async () => {
         try {
             const response = await axios.get(`/chat/conversation/find/${auth.user._id}/${recieverId}`)
-            console.log('conversation found === ', response.data)
             setconversation(response.data ?? null);
             return response.data?._id ?? null;
         } catch (err) {
@@ -69,11 +70,8 @@ const Chat = () => {
                 text: data.text,
                 createdAt: Date.now(),
             });
-            setLastMsg('')
             setTyping('')
-            if (auth.user._id !== data.senderId) {
-                server.emit("delivered", auth.user._id, recieverId)
-            }
+            setStatus(false);
         });
 
         let activityTimer
@@ -85,10 +83,10 @@ const Chat = () => {
             }, 3000)
         })
 
-        server.on("delivered", (socketId) => {
-            console.log(socketId)
-            setLastMsg("msg delivered !")
-        })
+        // server.on("delivered", (socketId) => {
+        //     console.log(socketId)
+        //     setLastMsg("msg delivered !")
+        // })
 
         const handleStart = async () => {
             const conv_id = await getConversation();
@@ -113,12 +111,10 @@ const Chat = () => {
         setMessages((prev) => [...prev, arrivalMessage]);
     }, [arrivalMessage]);
 
-
     const handleSubmit = async (e) => {
         e.preventDefault()
         setTyping('')
         setMsg('')
-        setLastMsg('')
         let conversationid
         if (!conversation) {
             try {
@@ -143,17 +139,17 @@ const Chat = () => {
         try {
             const response = await axios.post('/chat/msg', {
                 conversationId: conversation?._id || conversationid,
-                sender: auth.user.firstName + ' ' + auth.user.lastName,
+                senderId: auth.user._id,
+                senderName: auth.user.firstName + ' ' + auth.user.lastName,
                 text: msg,
             })
-            console.log(response.data)
+            //server.emit("delivered", auth.user._id, recieverId)
+            setStatus(true)
             setMessages([...messages, response.data.savedMessage]);
         } catch (err) {
             console.log(err)
         }
     }
-
-
 
     return (
         <div>
@@ -175,13 +171,13 @@ const Chat = () => {
                                     <>
                                         {messages.map((message) => {
                                             return (
-                                                <p key={message._id}>{message.text} from {message.sender}</p>
+                                                <p key={message._id}>{message.text} from {message.senderName}</p>
                                             )
                                         })}
                                     </>
                                 )}
-                                {lastMsg && <p>{lastMsg}</p>}
                                 {typing && <p>{typing}</p>}
+                                {status && <p>msg delivered</p>}
                             </>
                         ) : (
                             <p>Start a conversation</p>

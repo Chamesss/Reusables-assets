@@ -1,4 +1,5 @@
 const socketIo = require("socket.io");
+const User = require('./models/user')
 
 let users = [];
 
@@ -38,6 +39,30 @@ const getUser = (id) => {
   return users.find((user) => (user.userId === id));
 };
 
+const updateUserStatusActive = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    if (user) {
+      user.status = true
+      user.save()
+    }
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+const updateUserStatusOffline = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    if (user) {
+      user.status = false
+      user.save()
+    }
+  } catch (err) {
+    console.log(err)
+  }
+}
+
 const initializeSocket = (server) => {
   const io = socketIo(server, {
     cors: {
@@ -48,6 +73,8 @@ const initializeSocket = (server) => {
 
   io.on("connection", (socket) => {
     console.log("a user connected.");
+    const userId = socket.handshake.query.userId;
+    updateUserStatusActive(userId)
 
     // Add new user that contain the socketId related to all same conversations
     socket.on("addUser", (userId, receiverId) => {
@@ -57,53 +84,45 @@ const initializeSocket = (server) => {
     // Send typing event to all same conversations
     socket.on("typing", (senderName, senderId, receiverId) => {
       const receiver = getUser(receiverId);
-      const conversationsReceiver = receiver.conversations.filter((cnv) => {
-        return cnv.receiverId === senderId
-      })
-      conversationsReceiver.map((cnv => {
-        io.to(cnv.socketId).emit("typing", senderName)
-      }))
+      if (receiver) {
+        const conversationsReceiver = receiver.conversations.filter((cnv) => {
+          return cnv.receiverId === senderId
+        })
+        conversationsReceiver.map((cnv => {
+          io.to(cnv.socketId).emit("typing", senderName)
+        }))
+      }
     })
 
     // send and get message 
     socket.on("sendMessage", ({ senderId, senderName, receiverId, text }) => {
       const receiver = getUser(receiverId);
       const sender = getUser(senderId)
-      const conversationsReceiver = receiver.conversations.filter((cnv) => {
-        return cnv.receiverId === senderId
-      })
-      const conversationsSender = sender.conversations.filter((cnv) => {
-        return cnv.receiverId === receiverId;
-      });
-      const conversations = [...conversationsReceiver, ...conversationsSender];
-      if (conversations.length > 0) {
-        conversations.map((cnv => {
-          io.to(cnv.socketId).emit("getMessage", {
-            senderId,
-            senderName,
-            text,
-          });
-        }))
+      if (receiver) {
+        const conversationsReceiver = receiver.conversations.filter((cnv) => {
+          return cnv.receiverId === senderId
+        })
+        const conversationsSender = sender.conversations.filter((cnv) => {
+          return cnv.receiverId === receiverId;
+        });
+        const conversations = [...conversationsReceiver, ...conversationsSender];
+        if (conversations.length > 0) {
+          conversations.map((cnv => {
+            io.to(cnv.socketId).emit("getMessage", {
+              senderId,
+              senderName,
+              text,
+            });
+          }))
+        }
       }
     });
-
-    // when message is delivered
-    socket.on("delivered", (receiverId, senderId) => {
-      const sender = getUser(senderId);
-      const conversations = sender.conversations.filter((cnv) => {
-        return cnv.receiverId === receiverId
-      })
-      if (conversations.length > 0) {
-        conversations.map((cnv) => {
-          io.to(cnv.socketId).emit("delivered", cnv.socketId)
-        })
-      }
-    })
 
     // when disconnect
     socket.on("disconnect", () => {
       console.log("a user disconnected!");
       removeUser(socket.id);
+      updateUserStatusOffline(userId)
     });
   });
 };
