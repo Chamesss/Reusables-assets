@@ -12,6 +12,7 @@ const UsersList = () => {
             try {
                 const response = await axios.get('/user/allusers');
                 setUsers(response.data)
+                console.log(response.data)
             } catch (err) {
                 console.log(err);
             }
@@ -19,8 +20,8 @@ const UsersList = () => {
         getUsers();
     }, [])
 
-    const handleNavigation = (receiverId) => {
-        navigate(`/protected/userslist/messages/${receiverId}`);
+    const handleNavigation = (receiver_id) => {
+        navigate(`/protected/userslist/messages/${receiver_id}`);
     }
 
     return (
@@ -29,9 +30,10 @@ const UsersList = () => {
                 return (
                     <div key={user._id}>
                         <span>{user.firstName}</span>
-                        {user.status && <span> (Online)</span>}
+                        {user.status && <span>{user.status}</span>}
                         <button onClick={() => handleNavigation(user._id)}>Send msg!</button>
                         <br />
+                        {console.log(user)}
                     </div>
                 )
             })}

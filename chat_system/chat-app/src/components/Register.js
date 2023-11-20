@@ -8,8 +8,8 @@ const Register = () => {
 
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
+    const [email, setEmail] = useState('')
     const [pwd, setPwd] = useState('')
-    const [age, setAge] = useState(null)
     const [matchPwd, setMatchPwd] = useState('')
     const [error, setError] = useState('');
     const { setAuth } = useAuth();
@@ -25,10 +25,6 @@ const Register = () => {
             setError('Invalid lastName')
             return
         }
-        if (!age) {
-            setError('Invalid age')
-            return
-        }
         if (!pwd) {
             setError('Enter your password')
             return
@@ -41,12 +37,16 @@ const Register = () => {
             setError(`passwords doesn't match`)
             return
         }
+        if (!email || email.length < 3) {
+            setError(`passwords doesn't match`)
+            return
+        }
 
         try {
             const response = await axios.post('/user/createuser', {
                 firstName,
                 lastName,
-                age,
+                email,
                 password: pwd
             })
             if (response.status === 200) {
@@ -91,15 +91,15 @@ const Register = () => {
                     required
                 />
                 <br />
-                <label htmlFor="age">
-                    Age:
+                <label htmlFor="email">
+                    email:
                 </label>
                 <br />
                 <input
-                    type="number"
-                    id="age"
-                    onChange={(e) => setAge(e.target.value)}
-                    value={age}
+                    type="email"
+                    id="email"
+                    onChange={(e) => setEmail(e.target.value)}
+                    value={email}
                     required
                 />
                 <br />

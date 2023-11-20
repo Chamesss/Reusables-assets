@@ -2,7 +2,10 @@ const Conversation = require('../models/conversation');
 
 exports.newConversation = async (req, res) => {
     const newConversation = new Conversation({
-        members: [req.body.senderId, req.body.receiverId],
+        participant: [
+            { user: req.body.senderId, sockets: [] },
+            { user: req.body.receiverId, sockets: [] },
+        ],
     });
     try {
         const savedConversation = await newConversation.save();
@@ -12,10 +15,25 @@ exports.newConversation = async (req, res) => {
     }
 }
 
+exports.addMessage = async (req, res) => {
+    try {
+        const conversation = await Conversation.findById(req.body.conversationId);
+        const message = {
+            to: req.body.receiver_Id,
+            from: req.body.senderId,
+            text: req.body.text
+        }
+        conversation.messages.push(message)
+        await conversation.save();
+    } catch (error) {
+        console.log(error)
+    }
+}
+
 exports.getAllConversations = async (req, res) => {
     try {
         const conversations = await Conversation.find({
-            members: { $in: [req.params.userId] }
+            participant: { $in: [req.params.userId] }
         })
         res.status(200).json(conversations);
     } catch (err) {
@@ -24,36 +42,30 @@ exports.getAllConversations = async (req, res) => {
 }
 
 exports.getConversationOfTwoUsers = async (req, res) => {
-    let conversation
     try {
         if (req.params.firstUserId !== req.params.secondUserId) {
-            conversation = await Conversation.findOne({
-                $and: [
-                    { members: { $elemMatch: { $eq: req.params.firstUserId } } },
-                    { members: { $elemMatch: { $eq: req.params.secondUserId } } }
-                ]
+            const conversation = await Conversation.findOne({
+                'participant.user': { $all: [req.params.firstUserId, req.params.secondUserId] }
             });
+            res.status(200).json(conversation);
         } else {
-            conversation = await Conversation.aggregate([
+            const conversation = await Conversation.aggregate([
                 {
                     $project: {
-                        members: {
-                            $slice: ['$members', 2]
+                        participant: {
+                            $slice: ['$participant', 2]
                         }
                     }
                 },
                 {
                     $match: {
-                        members: [req.params.firstUserId, req.params.secondUserId]
+                        'participant.user': { $all: [req.params.firstUserId, req.params.secondUserId] }
                     }
                 }
-            ])
-            conversation = conversation[0]
+            ]);
+            res.status(200).json(conversation[0]);
         }
-
-        res.status(200).json(conversation);
     } catch (err) {
-        console.log('error === ', err)
-        res.status(500).json(err)
+        res.status(500).json(err);
     }
-}
+};

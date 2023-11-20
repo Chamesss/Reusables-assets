@@ -13,9 +13,8 @@ const setCookie = (res, name, value, maxAge) => {
 
 exports.createUser = async (req, res) => {
   try {
-    const { firstName, lastName, age, password } = req.body;
-    console.log(firstName, lastName, age, password);
-    const existingUser = await User.findOne({ firstName, lastName });
+    const { firstName, lastName, email, password } = req.body;
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: 'User already exists' });
     }
@@ -24,7 +23,7 @@ exports.createUser = async (req, res) => {
     const user = new User({
       firstName,
       lastName,
-      age,
+      email,
       password: hashedPassword,
     });
     const savedUser = await user.save();

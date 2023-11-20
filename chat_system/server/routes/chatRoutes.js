@@ -3,7 +3,7 @@ const router = express.Router();
 const messageController = require('../controllers/messageController');
 const conversationController = require('../controllers/conversationController');
 
-router.post('/msg', messageController.addMessage);
+router.post('/msg', conversationController.addMessage);
 router.get('/msg/:conversationId', messageController.getMessages);
 router.post('/conversation', conversationController.newConversation);
 router.get('/conversation/:userId', conversationController.getAllConversations);

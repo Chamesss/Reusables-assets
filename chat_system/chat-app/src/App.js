@@ -24,7 +24,7 @@ function App() {
         <Route path="/" element={<RequireAuth />}>
           <Route path="/protected/*" element={<Protected />} />
           <Route path="/protected/userslist" element={<UsersList />} />
-          <Route path="/protected/userslist/messages/:recieverId" element={<Chat />} />
+          <Route path="/protected/userslist/messages/:receiver_id" element={<Chat />} />
         </Route>
       </Route>
     </Routes>

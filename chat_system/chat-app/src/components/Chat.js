@@ -5,77 +5,28 @@ import axios from '../api/axios';
 import useAuth from '../hooks/useAuth';
 
 const Chat = () => {
-    const { recieverId } = useParams();
+
+    const { receiver_id } = useParams();
+    const [socket, setSocket] = useState('')
     const { auth } = useAuth();
-    const [conversation, setconversation] = useState(null);
-    const [messages, setMessages] = useState(null);
-    const [msg, setMsg] = useState('');
-    const [status, setStatus] = useState(false);
-    const [arrivalMessage, setArrivalMessage] = useState(null);
-    const [server, setServer] = useState(null);
-    const [mounted, setMounted] = useState(false)
+    const [conversation, setconversation] = useState(null)
+    const [loading, setLoading] = useState(true)
     const [typing, setTyping] = useState('')
+    const [arrivalMessage, setArrivalMessage] = useState(null);
+    const [msg, setMsg] = useState('');
+    const [messages, setMessages] = useState('');
 
     /* eslint-disable react-hooks/exhaustive-deps */
 
-    const getMessages = async (conv_id) => {
-        try {
-            const response = await axios.get(`/chat/msg/${conv_id}`);
-            setMessages(response.data);
-            const messages = response.data
-            if (messages.length > 0 && messages[messages.length - 1].senderId === auth.user._id) {
-                setStatus(true)
-            }
-        } catch (err) {
-            console.log(err);
-        }
-    };
-
-    const getConversation = async () => {
-        try {
-            const response = await axios.get(`/chat/conversation/find/${auth.user._id}/${recieverId}`)
-            setconversation(response.data ?? null);
-            return response.data?._id ?? null;
-        } catch (err) {
-            console.log(err);
-        }
-    }
-
-    const handleTyping = (e) => {
-        setMsg(e.target.value);
-        server.emit("typing", auth.user.firstName, auth.user._id, recieverId)
-    }
+    /* UseEffects */
 
     useEffect(() => {
-        if (!server) {
-            setServer(io("ws://localhost:8080"));
-        }
+        if (!auth || !receiver_id || !socket) { return }
+        getConversation()
 
-        return () => {
-            server?.disconnect();
-        };
-    }, [server]);
-
-    useEffect(() => {
-        if (!server || !auth) return;
-        server.on('connect', () => {
-            console.log('user connected')
-        })
-
-        server.emit("addUser", auth.user._id, recieverId);
-
-        server.on("getMessage", (data) => {
-            setArrivalMessage({
-                sender: data.senderName,
-                text: data.text,
-                createdAt: Date.now(),
-            });
-            setTyping('')
-            setStatus(false);
-        });
-
+        //Typing event
         let activityTimer
-        server.on("typing", (senderName) => {
+        socket.on("typing", (senderName) => {
             setTyping(`${senderName} is typing...`)
             clearTimeout(activityTimer)
             activityTimer = setTimeout(() => {
@@ -83,33 +34,69 @@ const Chat = () => {
             }, 3000)
         })
 
-        // server.on("delivered", (socketId) => {
-        //     console.log(socketId)
-        //     setLastMsg("msg delivered !")
-        // })
+        //NewMessage event
+        socket.on("getMessage", (data) => {
+            setArrivalMessage({
+                from: data.message.from,
+                text: data.message.text,
+                createdAt: data.message.created_at,
+            });
+            setTyping('')
+            //setStatus(false);
+        });
 
-        const handleStart = async () => {
-            const conv_id = await getConversation();
-            getMessages(conv_id);
-            setMounted(true);
-        }
 
-        handleStart();
-
-        return () => {
-            server.off('connect');
-            server.off('getMessage');
-        };
-    }, [auth, server, recieverId])
-
+    }, [auth, receiver_id, socket])
 
     useEffect(() => {
-        if (!messages) return
+        if (!socket) { return }
         if (!conversation) {
             getConversation();
+            return
         }
         setMessages((prev) => [...prev, arrivalMessage]);
     }, [arrivalMessage]);
+
+    useEffect(() => {
+        if (!auth) { return }
+        if (!socket) {
+            setSocket(io("ws://localhost:8080", {
+                query: `user_id=${auth.user._id}`
+            }))
+            return
+        }
+        return () => {
+            socket?.off("connect");
+        };
+    }, [auth])
+
+    /* End UseEffects */
+
+
+    /* Functions */
+
+    const getConversation = async () => {
+        try {
+            const response = await axios.get(`/chat/conversation/find/${auth.user._id}/${receiver_id}`)
+            setconversation(response.data);
+            setMessages(response.data.messages)
+            console.log('conversation === ', response )
+            if (response.data !== null) {
+                socket.emit("addConversation", response.data._id);
+                socket.emit("addSocket", response.data._id, auth.user._id)
+            }
+            setLoading(false)
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    const handleTyping = (e) => {
+        setMsg(e.target.value);
+        if (conversation) {
+            socket.emit("typing", conversation._id, auth.user.firstName, receiver_id)
+        }
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -120,40 +107,33 @@ const Chat = () => {
             try {
                 const response = await axios.post('/chat/conversation', {
                     senderId: auth.user._id,
-                    receiverId: recieverId,
+                    receiverId: receiver_id,
                 })
-                conversationid = response.data._id;
-                setconversation(response.data)
+                if (response.data !== null) {
+                    socket.emit("addConversation", response.data._id);
+                    socket.emit("addSocket", response.data._id, auth.user._id)
+                    conversationid = response.data._id;
+                    setconversation(response.data)
+                    setMessages(response.data.messages)
+                }
             } catch (err) {
                 console.log(err)
             }
         }
-
-        server.emit("sendMessage", {
-            senderId: auth.user._id,
-            senderName: auth.user.firstName + ' ' + auth.user.lastName,
-            receiverId: recieverId,
-            text: msg,
-        });
-
-        try {
-            const response = await axios.post('/chat/msg', {
-                conversationId: conversation?._id || conversationid,
-                senderId: auth.user._id,
-                senderName: auth.user.firstName + ' ' + auth.user.lastName,
-                text: msg,
-            })
-            //server.emit("delivered", auth.user._id, recieverId)
-            setStatus(true)
-            setMessages([...messages, response.data.savedMessage]);
-        } catch (err) {
-            console.log(err)
-        }
+        socket.emit("sendMessage", 
+            auth.user._id,
+            receiver_id,
+            conversation?._id || conversationid,
+            msg,
+        );
     }
 
+    /* End Functions */
+
     return (
+
         <div>
-            <p>Received id: {recieverId}</p>
+            <p>Received id: {receiver_id}</p>
             <input
                 placeholder='type a msg'
                 value={msg}
@@ -161,23 +141,20 @@ const Chat = () => {
             />
             <button onClick={handleSubmit} disabled={msg.length < 1}>Send</button>
             <h3>Conversation: </h3>
-            {mounted && (
+            {!loading && (
                 <>
                     {conversation ?
                         (
                             <>
                                 <p>Messages :</p>
-                                {messages && (
-                                    <>
-                                        {messages.map((message) => {
-                                            return (
-                                                <p key={message._id}>{message.text} from {message.senderName}</p>
-                                            )
-                                        })}
-                                    </>
-                                )}
+
+                                {messages.map((message) => {
+                                    return (
+                                        <p key={message._id}>{message.text} from {message.from}</p>
+                                    )
+                                })}
                                 {typing && <p>{typing}</p>}
-                                {status && <p>msg delivered</p>}
+                                {/* status && <p>msg delivered</p> */}
                             </>
                         ) : (
                             <p>Start a conversation</p>
@@ -185,6 +162,7 @@ const Chat = () => {
                 </>
             )}
         </div>
+
     )
 }
 
