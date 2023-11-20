@@ -7,15 +7,15 @@ import UsersList from "./components/UsersList";
 import Chat from "./components/Chat";
 import RequireAuth from "./utils/RequireAuth";
 import RequireNoAuth from "./utils/RequireNoAuth";
-import { Routes, Route } from 'react-router-dom';
+import { RouterProvider, Route, createBrowserRouter, createRoutesFromElements } from 'react-router-dom';
 
-function App() {
-  return (
-    <Routes>
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route>
       <Route path="/" element={<Layout />}>
         {/* public routes */}
-        <Route path="" element={<Home />} />
-        {/* public routes but no accessible for private */}
+        <Route index element={<Home />} />
+        {/* public routes but not accessible for private*/}
         <Route path="/" element={<RequireNoAuth />}>
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
@@ -27,7 +27,13 @@ function App() {
           <Route path="/protected/userslist/messages/:receiver_id" element={<Chat />} />
         </Route>
       </Route>
-    </Routes>
+    </Route>
+  )
+)
+
+function App() {
+  return (
+    <RouterProvider router={router} />
   );
 }
 
