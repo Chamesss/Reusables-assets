@@ -22,6 +22,7 @@ const Chat = () => {
 
     useEffect(() => {
         if (!auth || !receiver_id || !socket) { return }
+        socket.emit("statusOnline", auth.user._id)
         getConversation()
 
         //Typing event
