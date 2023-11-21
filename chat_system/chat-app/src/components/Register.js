@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
-import axios from '../api/axios';
 import useAuth from '../hooks/useAuth';
-
+import { registerUser } from '../api/UserApi';
+import { useMutation } from '@tanstack/react-query'
 
 const Register = () => {
 
@@ -11,59 +11,31 @@ const Register = () => {
     const [email, setEmail] = useState('')
     const [pwd, setPwd] = useState('')
     const [matchPwd, setMatchPwd] = useState('')
-    const [error, setError] = useState('');
     const { setAuth } = useAuth();
     const navigate = useNavigate();
 
+    const mutation = useMutation({
+        mutationFn: registerUser,
+        onSuccess: (data) => {
+            setAuth({ user: data.user, accessToken: data.accessToken })
+            navigate('/protected');
+        },
+        onMutate: async ({ firstName, lastName, email, pwd }) => {
+            if (pwd !== matchPwd) {
+                throw new Error("Passwords doesn't match")
+            }
+            return { firstName, lastName, email, pwd }
+        }
+    })
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!firstName || firstName.length < 3) {
-            setError('Invalid firstname')
-            return
-        }
-        if (!lastName || lastName.length < 3) {
-            setError('Invalid lastName')
-            return
-        }
-        if (!pwd) {
-            setError('Enter your password')
-            return
-        }
-        if (!matchPwd) {
-            setError('Enter confirm password')
-            return
-        }
-        if (pwd !== matchPwd) {
-            setError(`passwords doesn't match`)
-            return
-        }
-        if (!email || email.length < 3) {
-            setError(`passwords doesn't match`)
-            return
-        }
-
-        try {
-            const response = await axios.post('/user/createuser', {
-                firstName,
-                lastName,
-                email,
-                password: pwd
-            })
-            if (response.status === 200) {
-                setAuth({ user: response.data.user, accessToken: response.data.accessToken })
-                setError('');
-                navigate('/protected');
-            }
-        } catch (err) {
-            console.log(err)
-            setError(err.response);
-        }
+        mutation.mutate({ firstName, lastName, email, pwd })
     }
 
     return (
         <section>
             <h1>Register</h1>
-            {error && (<p>{error}</p>)}
             <form onSubmit={(e) => handleSubmit(e)}>
                 <label htmlFor="firstname">
                     Firstname:
@@ -127,10 +99,13 @@ const Register = () => {
                     required
                 />
                 <br />
-                <button>Sign Up</button>
+                {mutation.error && <p>{mutation.error.message}</p>}
+                <button type="submit">
+                    {mutation.isPending ? 'Pending...' : 'Register'}
+                </button>
             </form>
             <p>
-                Already registered?<br />
+                Already registered? <br />
                 <span className="line">
                     <Link to="/login">Sign In</Link>
                     <br />

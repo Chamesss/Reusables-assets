@@ -1,13 +1,9 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
 import useAuth from '../hooks/useAuth'
 
 const Home = () => {
   const { auth } = useAuth();
-
-  useEffect(() => {
-
-  }, [])
 
   return (
     <div>

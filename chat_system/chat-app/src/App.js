@@ -1,4 +1,4 @@
-import Home from "./components/Home";
+import Home from "./pages/Home";
 import Login from "./components/Login";
 import Protected from "./components/Protected";
 import Register from "./components/Register";

@@ -44,11 +44,11 @@ exports.login = async (req, res) => {
     const { firstName, password } = req.body;
     const user = await User.findOne({ firstName });
     if (!user) {
-      return res.status(401).json({ error: 'Invalid username' });
+      return res.status(401).json('Invalid username');
     }
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      return res.status(401).json({ error: 'Invalid password' });
+      return res.status(401).json('Invalid password');
     }
 
     // Set tokens and cookies
@@ -58,7 +58,7 @@ exports.login = async (req, res) => {
 
     return res.json({ user, accessToken });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json(error.message);
   }
 }
 

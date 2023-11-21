@@ -1,39 +1,36 @@
 import React from 'react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
-import axios from '../api/axios';
 import useAuth from '../hooks/useAuth';
+import { login } from '../api/UserApi';
+import { useMutation } from '@tanstack/react-query'
 
 const Login = () => {
     const [user, setUser] = useState('')
     const [pwd, setPwd] = useState('')
-    const [error, setError] = useState('');
     const { setAuth } = useAuth();
     const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await axios.post('/user/login',
-                JSON.stringify({ firstName: user, password: pwd }),
-                {
-                    headers: { 'Content-Type': 'application/json' },
-                    withCredentials: true
-                }
-            );
-            setAuth({ user: response.data.user, accessToken: response.data.accessToken })
+
+
+    const mutation = useMutation({
+        mutationFn: login,
+        onSuccess: (data) => {
+            setAuth({ user: data.user, accessToken: data.accessToken })
             setUser('');
             setPwd('');
             navigate('/protected');
-        } catch (error) {
-            setError('Incorrect username or password')
-        }
+        },
+    })
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        mutation.mutate({ user, pwd });
     }
 
     return (
         <section>
             <h1>Sign In</h1>
-            {error && (<p>{error}</p>)}
             <form onSubmit={handleSubmit}>
                 <label htmlFor="username">Username:</label>
                 <br />
@@ -56,7 +53,10 @@ const Login = () => {
                     required
                 />
                 <br />
-                <button>Sign In</button>
+                <button type="submit" disabled={mutation.isPending || !user || !pwd}>
+                    {mutation.isPending ? 'Logging in...' : 'Log in'}
+                </button>
+                {mutation.error && <p>{mutation.error.message}</p>}
             </form>
             <p>
                 Need an Account?<br />
