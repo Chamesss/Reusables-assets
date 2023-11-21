@@ -1,24 +1,16 @@
-import React, { useEffect, useState } from 'react'
-import axios from '../api/axios'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { getUsers } from '../api/UserApi'
 
 const UsersList = () => {
 
-    const [users, setUsers] = useState([])
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const getUsers = async () => {
-            try {
-                const response = await axios.get('/user/allusers');
-                setUsers(response.data)
-                console.log(response.data)
-            } catch (err) {
-                console.log(err);
-            }
-        }
-        getUsers();
-    }, [])
+    const getUsersQuery = useQuery({
+        queryKey:['getUsers'],
+        queryFn: getUsers
+    })
 
     const handleNavigation = (receiver_id) => {
         navigate(`/protected/userslist/messages/${receiver_id}`);
@@ -26,7 +18,7 @@ const UsersList = () => {
 
     return (
         <div>
-            {users.map(user => {
+            {getUsersQuery.data?.map(user => {
                 return (
                     <div key={user._id}>
                         <span>{user.firstName}</span>

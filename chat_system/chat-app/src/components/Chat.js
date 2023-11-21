@@ -1,8 +1,10 @@
+import { useMutation } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
-import axios from '../api/axios';
 import useAuth from '../hooks/useAuth';
+import { addConversation } from '../api/ChatApi';
+import axios from '../api/axios';
 
 const Chat = () => {
 
@@ -19,6 +21,7 @@ const Chat = () => {
     /* eslint-disable react-hooks/exhaustive-deps */
 
     /* UseEffects */
+
 
     useEffect(() => {
         if (!auth || !receiver_id || !socket) { return }
@@ -53,7 +56,6 @@ const Chat = () => {
         if (!socket) { return }
         if (!conversation) {
             getConversation();
-            return
         }
         setMessages((prev) => [...prev, arrivalMessage]);
     }, [arrivalMessage]);
@@ -76,13 +78,14 @@ const Chat = () => {
 
     /* Functions */
 
+    let conversationid
+
     const getConversation = async () => {
         try {
             const response = await axios.get(`/chat/conversation/find/${auth.user._id}/${receiver_id}`)
-            setconversation(response.data);
-            setMessages(response.data.messages)
-            console.log('conversation === ', response )
-            if (response.data !== null) {
+            if (response.data) {
+                setconversation(response.data);
+                setMessages(response.data.messages)
                 socket.emit("addConversation", response.data._id);
                 socket.emit("addSocket", response.data._id, auth.user._id)
             }
@@ -99,29 +102,25 @@ const Chat = () => {
         }
     }
 
+    const mutation = useMutation({
+        mutationFn: addConversation,
+        onSuccess: (data) => {
+            socket.emit("addConversation", data._id);
+            socket.emit("addSocket", data._id, auth.user._id)
+            conversationid = data._id;
+            setconversation(data)
+            setMessages(data.messages)
+        },          
+    })
+
     const handleSubmit = async (e) => {
         e.preventDefault()
         setTyping('')
         setMsg('')
-        let conversationid
         if (!conversation) {
-            try {
-                const response = await axios.post('/chat/conversation', {
-                    senderId: auth.user._id,
-                    receiverId: receiver_id,
-                })
-                if (response.data !== null) {
-                    socket.emit("addConversation", response.data._id);
-                    socket.emit("addSocket", response.data._id, auth.user._id)
-                    conversationid = response.data._id;
-                    setconversation(response.data)
-                    setMessages(response.data.messages)
-                }
-            } catch (err) {
-                console.log(err)
-            }
+            mutation.mutate({ senderId: auth.user._id, receiver_id })
         }
-        socket.emit("sendMessage", 
+        socket.emit("sendMessage",
             auth.user._id,
             receiver_id,
             conversation?._id || conversationid,

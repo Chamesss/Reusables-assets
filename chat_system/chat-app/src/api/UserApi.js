@@ -9,8 +9,8 @@ const registerUser = async (data) => {
             password: data.pwd
         })
         return response.data
-    } catch {
-        throw new Error("Registration failed.")
+    } catch (error) {
+        throw new Error(error.response.data)
     }
 }
 
@@ -29,4 +29,13 @@ const login = async (data) => {
     }
 }
 
-export { registerUser, login }
+const getUsers = async () => {
+    try {
+        const response = await axios.get('/user/allusers');
+        return response.data
+    } catch (error) {
+        throw new Error(error.response.data)
+    }
+}
+
+export { registerUser, login, getUsers }
