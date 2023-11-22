@@ -79,37 +79,29 @@ const initializeSocket = (server) => {
     socket.on("disconnect", async () => {
       try {
         if (conversationIdGlobal && conversationIdGlobal.length > 0) {
-          const chat = await Conversation.findById(conversationIdGlobal);
-          const currentParticipantIndex = chat.participant.findIndex(id => id.user.toString() === user_id);
-          if (currentParticipantIndex !== -1) {
-            const socketIndex = chat?.participant[currentParticipantIndex]?.sockets.findIndex(s => s === socket.id);
-            if (socketIndex !== -1) {
-              chat.participant[currentParticipantIndex].sockets.splice(socketIndex, 1);
-              await chat.save();
-              console.log('socket removed successfully !!!')
-            } else {
-              console.log(`There's is no socket ???`)
-            }
-          } else {
-            console.log(`There's no user by ${user_id} in the chat ???`)
-          }
+          await Conversation.findOneAndUpdate(
+            { 'participant.user': user_id, 'participant.sockets': socket.id },
+            { $pull: { 'participant.$.sockets': socket.id } },
+            { new: true, versionKey: false }
+          );
+          console.log('Socket removed:', socket.id);
         } else {
-          console.log('no conversation id ???')
+          console.log('No conversation id???');
         }
       } catch (error) {
-        console.log(error)
+        console.error('Error removing socket:', error);
       } finally {
         try {
-          console.log(`user ${user_id} has disconnected.`)
+          console.log(`User ${user_id} has disconnected.`);
           const status = await User.findByIdAndUpdate(user_id, {
             status: "Offline"
-          })
-          await status.save()
+          });
+          await status.save();
         } catch (error) {
-          console.log(error)
+          console.error('Error updating user status:', error);
         }
       }
-    })
+    });
   });
 };
 

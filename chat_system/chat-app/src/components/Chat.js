@@ -22,7 +22,6 @@ const Chat = () => {
 
     /* UseEffects */
 
-
     useEffect(() => {
         if (!auth || !receiver_id || !socket) { return }
         socket.emit("statusOnline", auth.user._id)
@@ -46,17 +45,11 @@ const Chat = () => {
                 createdAt: data.message.created_at,
             });
             setTyping('')
-            //setStatus(false);
         });
-
 
     }, [auth, receiver_id, socket])
 
     useEffect(() => {
-        if (!socket) { return }
-        if (!conversation) {
-            getConversation();
-        }
         setMessages((prev) => [...prev, arrivalMessage]);
     }, [arrivalMessage]);
 
@@ -78,16 +71,17 @@ const Chat = () => {
 
     /* Functions */
 
-    let conversationid
-
     const getConversation = async () => {
         try {
             const response = await axios.get(`/chat/conversation/find/${auth.user._id}/${receiver_id}`)
             if (response.data) {
+                console.log(response.data)
                 setconversation(response.data);
                 setMessages(response.data.messages)
                 socket.emit("addConversation", response.data._id);
                 socket.emit("addSocket", response.data._id, auth.user._id)
+            } else {
+                mutation.mutate({ senderId: auth.user._id, receiver_id })
             }
             setLoading(false)
         } catch (err) {
@@ -97,9 +91,7 @@ const Chat = () => {
 
     const handleTyping = (e) => {
         setMsg(e.target.value);
-        if (conversation) {
-            socket.emit("typing", conversation._id, auth.user.firstName, receiver_id)
-        }
+        socket.emit("typing", conversation._id, auth.user.firstName, receiver_id)
     }
 
     const mutation = useMutation({
@@ -107,23 +99,19 @@ const Chat = () => {
         onSuccess: (data) => {
             socket.emit("addConversation", data._id);
             socket.emit("addSocket", data._id, auth.user._id)
-            conversationid = data._id;
             setconversation(data)
             setMessages(data.messages)
-        },          
+        },
     })
 
     const handleSubmit = async (e) => {
         e.preventDefault()
         setTyping('')
         setMsg('')
-        if (!conversation) {
-            mutation.mutate({ senderId: auth.user._id, receiver_id })
-        }
         socket.emit("sendMessage",
             auth.user._id,
             receiver_id,
-            conversation?._id || conversationid,
+            conversation._id,
             msg,
         );
     }
